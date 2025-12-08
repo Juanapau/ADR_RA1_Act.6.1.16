@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ejercicio interactivo sobre confidencialidad de información en reportes empresariales">
+  <meta name="author" content="Ing. Juana Alt. Paulino">
+  <title>Casos de Estudio - Confidencialidad</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    .header {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 { color: #1e3a8a; font-size: 2.5em; margin-bottom: 10px; }
+    .header p { color: #64748b; font-size: 1.1em; }
+
+    .instructions {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-left: 6px solid #f59e0b;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .instructions h2 { color: #92400e; margin-bottom: 15px; font-size: 1.5em; }
+    .instructions p { color: #78350f; margin-bottom: 15px; }
+    .instructions ol { margin-left: 25px; color: #1e3a8a; }
+    .instructions li { margin: 10px 0; font-weight: 600; }
+
+    .student-info {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .student-info h3 { color: #1e3a8a; margin-bottom: 15px; font-size: 1.3em; }
+    .input-group { margin-bottom: 15px; }
+    .input-group label { display: block; color: #475569; font-weight: 600; margin-bottom: 5px; }
+    
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: border-color 0.3s;
+    }
+
+    .input-group input:focus { outline: none; border-color: #3b82f6; }
+
+    .tab-container {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    
+    .tab-button {
+      padding: 12px 24px;
+      border: none;
+      background: #e2e8f0;
+      color: #475569;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .tab-button:hover { background: #cbd5e1; }
+    
+    .tab-button.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+      color: white;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.5s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .scenario {
+      background: white;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .scenario-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      color: white;
+      padding: 25px;
+    }
+
+    .scenario-header.green {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    }
+
+    .scenario-header.purple {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+
+    .scenario-header.orange {
+      background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+    }
+
+    .scenario-header.red {
+      background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    }
+
+    .scenario-header h2 { font-size: 1.5em; margin-bottom: 8px; }
+    .scenario-header h3 { font-size: 1em; opacity: 0.9; font-weight: 400; }
+    .scenario-content { padding: 30px; }
+
+    .report-box {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 25px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85em;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+
+    .questions-box {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-left: 5px solid #3b82f6;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .questions-box h4 { color: #1e3a8a; margin-bottom: 15px; font-size: 1.3em; }
+
+    .answer-input {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 0.95em;
+      resize: vertical;
+      margin-top: 8px;
+      transition: border-color 0.3s;
+    }
+
+    .answer-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background-color: #f0f9ff;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .submit-button {
+      background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .submit-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
+    }
+
+    .teacher-button {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
+    }
+
+    .teacher-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.5);
+    }
+
+    .clear-button {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .clear-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
+
+    .download-section {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 15px;
+      padding: 30px;
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .download-section h3 { color: white; font-size: 1.5em; margin-bottom: 15px; }
+
+    .download-button {
+      background: white;
+      color: #059669;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .download-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 { font-size: 1.8em; }
+      .tabs { flex-direction: column; }
+      .tab-button { width: 100%; }
+      .button-group { flex-direction: column; }
+      .submit-button, .teacher-button, .clear-button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 CASOS DE ESTUDIO</h1>
+      <p>Confidencialidad de la Información en Reportes</p>
+      <p style="font-size: 0.9em; color: #94a3b8; margin-top: 10px;">
+        Centro Educativo Nuestra Sra. De la Altagracia | Ing. Juana Alt. Paulino
+      </p>
+    </div>
+
+    <div class="instructions">
+      <h2>📚 INSTRUCCIONES</h2>
+      <p>Se te asignará un escenario en el que analizarás un reporte ya redactado. Léelo y responde las preguntas:</p>
+      <ol>
+        <li>¿Qué información es confidencial?</li>
+        <li>¿Quiénes deberían tener acceso?</li>
+        <li>¿Qué riesgos existen si se filtra?</li>
+        <li>¿Qué medidas de protección implementar?</li>
+        <li>¿Qué consecuencias legales o éticas?</li>
+      </ol>
+    </div>
+
+    <div class="student-info">
+      <h3>👤 Información del Estudiante</h3>
+      <div class="input-group">
+        <label for="studentName">Nombre completo:</label>
+        <input type="text" id="studentName" placeholder="Tu nombre completo" required>
+      </div>
+      <div class="input-group">
+        <label for="currentDate">Fecha:</label>
+        <input type="date" id="currentDate" required>
+      </div>
+    </div>
+
+    <div class="tab-container">
+      <div class="tabs">
+        <button class="tab-button active" onclick="openTab(event, 'tab1')">Escenario 1</button>
+        <button class="tab-button" onclick="openTab(event, 'tab2')">Escenario 2</button>
+        <button class="tab-button" onclick="openTab(event, 'tab3')">Escenario 3</button>
+        <button class="tab-button" onclick="openTab(event, 'tab4')">Escenario 4</button>
+        <button class="tab-button" onclick="openTab(event, 'tab5')">Escenario 5</button>
+      </div>
+
+      <!-- ESCENARIO 1 -->
+      <div id="tab1" class="tab-content active">
+        <div class="scenario">
+          <div class="scenario-header">
+            <h2>ESCENARIO 1: Datos Personales de Estudiantes</h2>
+            <h3>Reporte Académico Trimestral</h3>
+          </div>
+          <div class="scenario-content">
+            <div class="report-box">Centro Educativo - Tercer Trimestre 2024
+CURSO: 5to. Secundaria - Sección B
+
+1. PÉREZ GONZÁLEZ, MARÍA JOSÉ
+   Cédula: 402-2345678-9
+   Dirección: Calle Principal #45
+   Teléfono: 809-555-1234
+   Teléfono madre: 809-555-5678
+   Promedio: 92.5
+
+2. RODRÍGUEZ SANTOS, PEDRO LUIS
+   Cédula: 402-3456789-0
+   Dirección: Av. Libertad #123
+   Teléfono madre: 809-555-6789
+   Promedio: 67.3
+   Observación: Necesita refuerzo
+
+Promedio curso: 78.4
+Aprobados: 25 | Reprobados: 3</div>
+            <div class="questions-box">
+              <h4>Preguntas</h4>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                  <strong>1. ¿Qué información es confidencial?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>2. ¿Quiénes deberían tener acceso?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>3. ¿Qué riesgos si se filtra?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>4. ¿Medidas de protección?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>5. ¿Consecuencias legales/éticas?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+              </ul>
+            </div>
+            <div class="button-group">
+              <button class="submit-button" onclick="submitAnswers(1)">✅ Enviar</button>
+              <button class="teacher-button" onclick="downloadTeacherReport()">👩‍🏫 Reporte Docente</button>
+              <button class="clear-button" onclick="clearAllData()">🗑️ Limpiar Datos</button>
+            </div>
+            <div class="success-message">¡Enviado! ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESCENARIO 2 -->
+      <div id="tab2" class="tab-content">
+        <div class="scenario">
+          <div class="scenario-header green">
+            <h2>ESCENARIO 2: Información Financiera</h2>
+            <h3>Informe Financiero Mensual</h3>
+          </div>
+          <div class="scenario-content">
+            <div class="report-box">INFORME FINANCIERO - Octubre 2024
+CONFIDENCIAL
+
+Ingresos: RD$ 4,850,000
+- Mensualidades: RD$ 3,200,000
+- Inscripciones: RD$ 450,000
+
+Banco Popular #1234-5678-90
+Saldo: RD$ 3,890,000
+
+Egresos: RD$ 3,110,000
+- Nómina: RD$ 1,850,000
+- Operativos: RD$ 785,000
+
+Cuentas por cobrar: RD$ 1,450,000
+- Familia Gómez: RD$ 85,000 (4 meses)
+- Familia Jiménez: RD$ 105,000 (5 meses)
+
+Credenciales:
+Usuario: admin_finanzas
+Clave: CFin2024#Segura</div>
+            <div class="questions-box">
+              <h4>Preguntas</h4>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                  <strong>1. ¿Qué información es confidencial?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>2. ¿Quiénes deberían tener acceso?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>3. ¿Qué riesgos si se filtra?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>4. ¿Medidas de protección?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>5. ¿Consecuencias legales/éticas?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+              </ul>
+            </div>
+            <div class="button-group">
+              <button class="submit-button" onclick="submitAnswers(2)">✅ Enviar</button>
+              <button class="teacher-button" onclick="downloadTeacherReport()">👩‍🏫 Reporte Docente</button>
+              <button class="clear-button" onclick="clearAllData()">🗑️ Limpiar Datos</button>
+            </div>
+            <div class="success-message">¡Enviado! ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESCENARIO 3 -->
+      <div id="tab3" class="tab-content">
+        <div class="scenario">
+          <div class="scenario-header purple">
+            <h2>ESCENARIO 3: Datos de Nómina</h2>
+            <h3>Reporte de Nómina Mensual</h3>
+          </div>
+          <div class="scenario-content">
+            <div class="report-box">NÓMINA NOVIEMBRE 2024
+CONFIDENCIAL
+
+1. MÉNDEZ LÓPEZ, ROBERTO
+   Cédula: 001-0234567-8
+   Cargo: Profesor Matemáticas
+   Salario base: RD$ 45,000
+   Bonificación: RD$ 5,000
+   Total: RD$ 50,000
+   Neto: RD$ 42,845
+   Cuenta: Banco Popular #4567-8901-23
+   Tel: 809-555-4567
+
+2. GARCÍA SANTOS, ISABEL
+   Cédula: 001-1345678-9
+   Cargo: Profesora Lengua
+   Salario base: RD$ 38,000
+   Neto: RD$ 35,727
+   Cuenta: BHD #7890-1234-56
+
+3. FERNÁNDEZ CRUZ, PEDRO
+   Cargo: Director Académico
+   Salario base: RD$ 75,000
+   Neto: RD$ 79,708
+
+Total nómina: RD$ 287,219</div>
+            <div class="questions-box">
+              <h4>Preguntas</h4>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                  <strong>1. ¿Qué información es confidencial?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>2. ¿Quiénes deberían tener acceso?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>3. ¿Qué riesgos si se filtra?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>4. ¿Medidas de protección?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>5. ¿Consecuencias legales/éticas?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+              </ul>
+            </div>
+            <div class="button-group">
+              <button class="submit-button" onclick="submitAnswers(3)">✅ Enviar</button>
+              <button class="teacher-button" onclick="downloadTeacherReport()">👩‍🏫 Reporte Docente</button>
+              <button class="clear-button" onclick="clearAllData()">🗑️ Limpiar Datos</button>
+            </div>
+            <div class="success-message">¡Enviado! ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESCENARIO 4 -->
+      <div id="tab4" class="tab-content">
+        <div class="scenario">
+          <div class="scenario-header orange">
+            <h2>ESCENARIO 4: Evaluaciones Individuales</h2>
+            <h3>Informe de Examen Final</h3>
+          </div>
+          <div class="scenario-content">
+            <div class="report-box">RESULTADOS EXAMEN FINAL
+Análisis y Diseño de Reportes -5to.B de Secundaria
+
+1. GÓMEZ PÉREZ, ANDREA
+   Matrícula: 2024-5B-001
+   Calificación: 48/100 - REPROBADO
+   Situación: Padres divorciados
+   Recomendación: Tutoría
+
+2. MARTÍNEZ, CARLOS
+   Matrícula: 2024-5B-002
+   Calificación: 95/100 - HONORES
+   Recomendación: Olimpiadas
+
+3. LÓPEZ, MIGUEL
+   Matrícula: 2024-5B-004
+   Calificación: 38/100 - REPROBADO
+   Incidentes: 3 reportes disciplinarios
+   Observación: Copiando en examen
+   Recomendación: Evaluación psicológica
+
+Promedio: 71.2
+Aprobados: 18 (72%)
+Reprobados: 7 (28%)</div>
+            <div class="questions-box">
+              <h4>Preguntas</h4>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                  <strong>1. ¿Qué información es confidencial?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>2. ¿Quiénes deberían tener acceso?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>3. ¿Qué riesgos si se filtra?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>4. ¿Medidas de protección?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>5. ¿Consecuencias legales/éticas?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+              </ul>
+            </div>
+            <div class="button-group">
+              <button class="submit-button" onclick="submitAnswers(4)">✅ Enviar</button>
+              <button class="teacher-button" onclick="downloadTeacherReport()">👩‍🏫 Reporte Docente</button>
+              <button class="clear-button" onclick="clearAllData()">🗑️ Limpiar Datos</button>
+            </div>
+            <div class="success-message">¡Enviado! ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESCENARIO 5 -->
+      <div id="tab5" class="tab-content">
+        <div class="scenario">
+          <div class="scenario-header red">
+            <h2>ESCENARIO 5: Información Médica</h2>
+            <h3>Registro Médico Estudiantil</h3>
+          </div>
+          <div class="scenario-content">
+            <div class="report-box">EXPEDIENTES MÉDICOS
+SECRETO PROFESIONAL
+
+EXPEDIENTE #1
+RODRÍGUEZ, KARLA - 15 años
+Diagnóstico: Diabetes Tipo 1
+Tratamiento: Insulina diaria
+Contacto emergencia: 809-555-7890
+
+EXPEDIENTE #2
+GONZÁLEZ, JOSÉ - 15 años
+Diagnóstico: Asma Bronquial Moderada
+Tratamiento: Inhalador preventivo
+Alergias: Polen, ácaros
+
+EXPEDIENTE #3
+PÉREZ, MIGUEL - 15 años
+Diagnóstico: VIH Positivo
+Estado: Controlado, indetectable
+Tratamiento: Antirretroviral
+
+⚠️ INFORMACIÓN ULTRA CONFIDENCIAL
+⚠️ SOLO ENFERMERA Y DIRECTORA
+⚠️ PROTEGER DE BULLYING</div>
+            <div class="questions-box">
+              <h4>Preguntas</h4>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                  <strong>1. ¿Qué información es confidencial?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>2. ¿Quiénes deberían tener acceso?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>3. ¿Qué riesgos si se filtra?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>4. ¿Medidas de protección?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+                <li style="margin-bottom: 15px;">
+                  <strong>5. ¿Consecuencias legales/éticas?</strong>
+                  <textarea class="answer-input"></textarea>
+                </li>
+              </ul>
+            </div>
+            <div class="button-group">
+              <button class="submit-button" onclick="submitAnswers(5)">✅ Enviar</button>
+              <button class="teacher-button" onclick="downloadTeacherReport()">👩‍🏫 Reporte Docente</button>
+              <button class="clear-button" onclick="clearAllData()">🗑️ Limpiar Datos</button>
+            </div>
+            <div class="success-message">¡Enviado! ✓</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="download-section">
+      <h3>📥 Descargar tu Trabajo</h3>
+      <button class="download-button" onclick="downloadPDF()">
+        📄 Descargar Mi Análisis PDF
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // ⚠️ IMPORTANTE: Reemplaza esta URL con la que obtendrás de Google Apps Script
+    // La URL debe terminar en /exec
+    const GOOGLE_SCRIPT_URL = 'TU_URL_AQUI/exec';
+    
+    let submittedAnswers = [];
+
+    function openTab(evt, tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    function submitAnswers(num) {
+      const name = document.getElementById('studentName').value;
+      const date = document.getElementById('currentDate').value;
+      
+      if (!name || !date) {
+        alert('Por favor completa tu nombre y fecha');
+        return;
+      }
+
+      const tab = document.getElementById('tab' + num);
+      const answers = [];
+      let complete = true;
+      
+      tab.querySelectorAll('.answer-input').forEach(ta => {
+        if (!ta.value.trim()) complete = false;
+        answers.push(ta.value);
+      });
+
+      if (!complete) {
+        alert('Por favor responde todas las preguntas');
+        return;
+      }
+
+      const titles = [
+        'Datos Personales de Estudiantes',
+        'Información Financiera',
+        'Datos de Nómina',
+        'Evaluaciones Individuales',
+        'Información Médica'
+      ];
+
+      const submission = {
+        studentName: name,
+        date: date,
+        scenario: num,
+        scenarioTitle: titles[num - 1],
+        answers: answers,
+        timestamp: new Date().toISOString()
+      };
+
+      submittedAnswers.push(submission);
+      
+      try {
+        const stored = JSON.parse(localStorage.getItem('answers') || '[]');
+        stored.push(submission);
+        localStorage.setItem('answers', JSON.stringify(stored));
+      } catch (e) {
+        console.log('No se pudo guardar localmente');
+      }
+      
+      sendToGoogleSheets(submission, tab);
+    }
+
+    function sendToGoogleSheets(data, tab) {
+      const successMsg = tab.querySelector('.success-message');
+      successMsg.textContent = '📤 Enviando a Google Sheets...';
+      successMsg.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)';
+      successMsg.style.display = 'block';
+
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'TU_URL_AQUI/exec') {
+        console.warn('⚠️ URL de Google Sheets no configurada');
+        successMsg.textContent = '✅ Respuestas guardadas localmente (configura Google Sheets)';
+        successMsg.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        setTimeout(() => {
+          successMsg.style.display = 'none';
+        }, 4000);
+        return;
+      }
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(() => {
+        successMsg.textContent = '✅ ¡Respuestas enviadas exitosamente a Google Sheets!';
+        successMsg.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        setTimeout(() => {
+          successMsg.style.display = 'none';
+        }, 4000);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        successMsg.textContent = '⚠️ Guardado localmente. Verifica conexión a Google Sheets.';
+        successMsg.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        setTimeout(() => {
+          successMsg.style.display = 'none';
+        }, 4000);
+      });
+    }
+
+    function downloadPDF() {
+      const name = document.getElementById('studentName').value;
+      const date = document.getElementById('currentDate').value;
+      
+      if (!name || !date) {
+        alert('Por favor completa tu nombre y fecha');
+        return;
+      }
+
+      const tab = document.querySelector('.tab-content.active');
+      const answers = [];
+      let complete = true;
+      
+      tab.querySelectorAll('.answer-input').forEach(ta => {
+        if (!ta.value.trim()) complete = false;
+        answers.push(ta.value);
+      });
+
+      if (!complete) {
+        alert('Por favor responde todas las preguntas antes de descargar');
+        return;
+      }
+
+      const scenarioTitle = tab.querySelector('.scenario-header h2').textContent;
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.text('ANALISIS DE CONFIDENCIALIDAD', 105, 20, { align: 'center' });
+        doc.setFontSize(11);
+        doc.text('Estudiante: ' + name, 20, 35);
+        doc.text('Fecha: ' + date, 20, 42);
+        doc.setFontSize(12);
+        doc.text(scenarioTitle, 20, 55);
+        
+        let y = 70;
+        const questions = [
+          '1. Informacion confidencial?',
+          '2. Quien accede?',
+          '3. Riesgos?',
+          '4. Proteccion?',
+          '5. Consecuencias?'
+        ];
+
+        questions.forEach((q, i) => {
+          if (y > 260) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.setFont(undefined, 'bold');
+          doc.text(q, 20, y);
+          y += 7;
+          doc.setFont(undefined, 'normal');
+          const lines = doc.splitTextToSize(answers[i], 170);
+          doc.text(lines, 20, y);
+          y += (lines.length * 5) + 8;
+        });
+
+        doc.save('Analisis_' + name.replace(/\s+/g, '_') + '.pdf');
+        alert('¡PDF descargado exitosamente!');
+      } catch (error) {
+        alert('Error al generar PDF');
+        console.error(error);
+      }
+    }
+
+    function downloadTeacherReport() {
+      const pin = prompt('Ingresa el PIN de acceso (solo docentes):');
+      if (pin !== '1070') {
+        alert('❌ PIN incorrecto');
+        return;
+      }
+
+      try {
+        const stored = localStorage.getItem('answers');
+        if (stored) {
+          submittedAnswers = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.log('Error al cargar respuestas');
+      }
+
+      if (submittedAnswers.length === 0) {
+        alert('⚠️ No hay respuestas guardadas todavía');
+        return;
+      }
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('REPORTE CONSOLIDADO', 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text('Total estudiantes: ' + submittedAnswers.length, 105, 30, { align: 'center' });
+        doc.text('Fecha: ' + new Date().toLocaleDateString(), 105, 37, { align: 'center' });
+        doc.text('Modulo: Analisis y Diseno de Reportes', 105, 44, { align: 'center' });
+        doc.text('Profesor: Ing. Juana Alt. Paulino', 105, 51, { align: 'center' });
+
+        const questions = [
+          '1. Que informacion es confidencial?',
+          '2. Quienes deberian tener acceso?',
+          '3. Que riesgos existen si se filtra?',
+          '4. Que medidas de proteccion implementar?',
+          '5. Que consecuencias legales o eticas?'
+        ];
+
+        submittedAnswers.forEach((sub, idx) => {
+          doc.addPage();
+          
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.text('Estudiante ' + (idx + 1) + ' de ' + submittedAnswers.length, 20, 20);
+          
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+          doc.text('Nombre: ', 20, 30);
+          doc.setFont(undefined, 'normal');
+          doc.text(sub.studentName, 40, 30);
+          
+          doc.setFont(undefined, 'bold');
+          doc.text('Fecha: ', 20, 37);
+          doc.setFont(undefined, 'normal');
+          doc.text(sub.date, 40, 37);
+          
+          doc.setFont(undefined, 'bold');
+          doc.text('Escenario: ', 20, 44);
+          doc.setFont(undefined, 'normal');
+          doc.text(sub.scenario.toString() + ' - ' + sub.scenarioTitle, 45, 44);
+          
+          doc.setDrawColor(59, 130, 246);
+          doc.line(20, 48, 190, 48);
+          
+          let y = 56;
+          
+          sub.answers.forEach((ans, i) => {
+            if (y > 250) {
+              doc.addPage();
+              y = 20;
+            }
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            const questionLines = doc.splitTextToSize(questions[i], 170);
+            doc.text(questionLines, 20, y);
+            y += (questionLines.length * 5) + 3;
+            
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            const answerLines = doc.splitTextToSize(ans || 'Sin respuesta', 170);
+            doc.text(answerLines, 20, y);
+            y += (answerLines.length * 4) + 8;
+          });
+        });
+
+        doc.save('Reporte_Consolidado_Estudiantes.pdf');
+        alert('✅ Reporte descargado exitosamente!');
+      } catch (error) {
+        alert('❌ Error al generar reporte');
+        console.error(error);
+      }
+    }
+
+    function clearAllData() {
+      const pin = prompt('Ingresa el PIN de acceso (solo docentes):');
+      if (pin !== '1070') {
+        alert('❌ PIN incorrecto');
+        return;
+      }
+
+      const confirmation = confirm('⚠️ ¿Eliminar TODAS las respuestas?\n\nTotal: ' + submittedAnswers.length + '\n\n🚨 NO se puede deshacer');
+      
+      if (!confirmation) return;
+
+      const doubleCheck = confirm('🔴 CONFIRMACIÓN FINAL:\n\n¿Borrar ' + submittedAnswers.length + ' respuestas?');
+      
+      if (!doubleCheck) return;
+
+      try {
+        submittedAnswers = [];
+        localStorage.removeItem('answers');
+        alert('✅ Datos eliminados exitosamente');
+      } catch (error) {
+        alert('❌ Error al eliminar datos');
+        console.error(error);
+      }
+    }
+
+    window.onload = function() {
+      try {
+        const stored = localStorage.getItem('answers');
+        if (stored) {
+          submittedAnswers = JSON.parse(stored);
+          console.log('Respuestas cargadas:', submittedAnswers.length);
+        }
+      } catch (e) {
+        console.log('No se pudieron cargar respuestas');
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('currentDate').value = today;
+    };
+  </script>
+</body>
+</html>
