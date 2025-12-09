@@ -674,9 +674,10 @@ Tratamiento: Antirretroviral
   <script>
     // ⚠️ IMPORTANTE: Reemplaza esta URL con la que obtendrás de Google Apps Script
     // La URL debe terminar en /exec
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzH4oFAZY7u1UyzDOnh1yD-evp-rERKdysSD0eT2ofLTQlz_WymUnAOPGkVwlocGT8R/exec';
+    const GOOGLE_SCRIPT_URL = 'TU_URL_AQUI/exec';
     
     let submittedAnswers = [];
+    let isInGoogleSites = (window.self !== window.top);
 
     function openTab(evt, tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -854,94 +855,120 @@ Tratamiento: Antirretroviral
         return;
       }
 
-      try {
-        const stored = localStorage.getItem('answers');
-        if (stored) {
-          submittedAnswers = JSON.parse(stored);
-        }
-      } catch (e) {
-        console.log('Error al cargar respuestas');
-      }
-
-      if (submittedAnswers.length === 0) {
-        alert('⚠️ No hay respuestas guardadas todavía');
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'TU_URL_AQUI/exec') {
+        alert('⚠️ Debes configurar GOOGLE_SCRIPT_URL para usar esta función en Google Sites');
         return;
       }
 
-      try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+      // Mostrar mensaje de carga
+      const loadingMsg = document.createElement('div');
+      loadingMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:9999;text-align:center;';
+      loadingMsg.innerHTML = '<div style="font-size:24px;margin-bottom:10px;">📊</div><div style="font-size:16px;font-weight:600;color:#1e3a8a;">Descargando datos desde Google Sheets...</div>';
+      document.body.appendChild(loadingMsg);
+
+      // Solicitar datos a Google Sheets
+      fetch(GOOGLE_SCRIPT_URL + '?action=getAllData', {
+        method: 'GET',
+      })
+      .then(response => response.json())
+      .then(result => {
+        document.body.removeChild(loadingMsg);
         
-        doc.setFontSize(18);
-        doc.text('REPORTE CONSOLIDADO', 105, 20, { align: 'center' });
-        doc.setFontSize(10);
-        doc.text('Total estudiantes: ' + submittedAnswers.length, 105, 30, { align: 'center' });
-        doc.text('Fecha: ' + new Date().toLocaleDateString(), 105, 37, { align: 'center' });
-        doc.text('Modulo: Analisis y Diseno de Reportes', 105, 44, { align: 'center' });
-        doc.text('Profesor: Ing. Juana Alt. Paulino', 105, 51, { align: 'center' });
+        if (result.status === 'error' || !result.data || result.data.length === 0) {
+          alert('⚠️ No hay respuestas guardadas en Google Sheets');
+          return;
+        }
 
-        const questions = [
-          '1. Que informacion es confidencial?',
-          '2. Quienes deberian tener acceso?',
-          '3. Que riesgos existen si se filtra?',
-          '4. Que medidas de proteccion implementar?',
-          '5. Que consecuencias legales o eticas?'
-        ];
+        const allData = result.data;
+        
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          
+          doc.setFontSize(18);
+          doc.text('REPORTE CONSOLIDADO', 105, 20, { align: 'center' });
+          doc.setFontSize(10);
+          doc.text('Total estudiantes: ' + allData.length, 105, 30, { align: 'center' });
+          doc.text('Fecha: ' + new Date().toLocaleDateString(), 105, 37, { align: 'center' });
+          doc.text('Modulo: Analisis y Diseno de Reportes', 105, 44, { align: 'center' });
+          doc.text('Profesor: Ing. Juana Alt. Paulino', 105, 51, { align: 'center' });
 
-        submittedAnswers.forEach((sub, idx) => {
-          doc.addPage();
-          
-          doc.setFontSize(14);
-          doc.setFont(undefined, 'bold');
-          doc.text('Estudiante ' + (idx + 1) + ' de ' + submittedAnswers.length, 20, 20);
-          
-          doc.setFontSize(11);
-          doc.setFont(undefined, 'bold');
-          doc.text('Nombre: ', 20, 30);
-          doc.setFont(undefined, 'normal');
-          doc.text(sub.studentName, 40, 30);
-          
-          doc.setFont(undefined, 'bold');
-          doc.text('Fecha: ', 20, 37);
-          doc.setFont(undefined, 'normal');
-          doc.text(sub.date, 40, 37);
-          
-          doc.setFont(undefined, 'bold');
-          doc.text('Escenario: ', 20, 44);
-          doc.setFont(undefined, 'normal');
-          doc.text(sub.scenario.toString() + ' - ' + sub.scenarioTitle, 45, 44);
-          
-          doc.setDrawColor(59, 130, 246);
-          doc.line(20, 48, 190, 48);
-          
-          let y = 56;
-          
-          sub.answers.forEach((ans, i) => {
-            if (y > 250) {
-              doc.addPage();
-              y = 20;
-            }
+          const questions = [
+            '1. Que informacion es confidencial?',
+            '2. Quienes deberian tener acceso?',
+            '3. Que riesgos existen si se filtra?',
+            '4. Que medidas de proteccion implementar?',
+            '5. Que consecuencias legales o eticas?'
+          ];
+
+          allData.forEach((row, idx) => {
+            doc.addPage();
             
-            doc.setFontSize(10);
+            doc.setFontSize(14);
             doc.setFont(undefined, 'bold');
-            const questionLines = doc.splitTextToSize(questions[i], 170);
-            doc.text(questionLines, 20, y);
-            y += (questionLines.length * 5) + 3;
+            doc.text('Estudiante ' + (idx + 1) + ' de ' + allData.length, 20, 20);
             
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('Nombre: ', 20, 30);
             doc.setFont(undefined, 'normal');
-            doc.setFontSize(9);
-            const answerLines = doc.splitTextToSize(ans || 'Sin respuesta', 170);
-            doc.text(answerLines, 20, y);
-            y += (answerLines.length * 4) + 8;
+            doc.text(row.nombre || '', 40, 30);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Fecha: ', 20, 37);
+            doc.setFont(undefined, 'normal');
+            doc.text(row.fecha || '', 40, 37);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Escenario: ', 20, 44);
+            doc.setFont(undefined, 'normal');
+            doc.text(row.escenario || '', 45, 44);
+            
+            doc.setDrawColor(59, 130, 246);
+            doc.line(20, 48, 190, 48);
+            
+            let y = 56;
+            
+            const answers = [
+              row.pregunta1 || 'Sin respuesta',
+              row.pregunta2 || 'Sin respuesta',
+              row.pregunta3 || 'Sin respuesta',
+              row.pregunta4 || 'Sin respuesta',
+              row.pregunta5 || 'Sin respuesta'
+            ];
+            
+            answers.forEach((ans, i) => {
+              if (y > 250) {
+                doc.addPage();
+                y = 20;
+              }
+              
+              doc.setFontSize(10);
+              doc.setFont(undefined, 'bold');
+              const questionLines = doc.splitTextToSize(questions[i], 170);
+              doc.text(questionLines, 20, y);
+              y += (questionLines.length * 5) + 3;
+              
+              doc.setFont(undefined, 'normal');
+              doc.setFontSize(9);
+              const answerLines = doc.splitTextToSize(ans, 170);
+              doc.text(answerLines, 20, y);
+              y += (answerLines.length * 4) + 8;
+            });
           });
-        });
 
-        doc.save('Reporte_Consolidado_Estudiantes.pdf');
-        alert('✅ Reporte descargado exitosamente!');
-      } catch (error) {
-        alert('❌ Error al generar reporte');
-        console.error(error);
-      }
+          doc.save('Reporte_Consolidado_Estudiantes.pdf');
+          alert('✅ Reporte descargado exitosamente!');
+        } catch (error) {
+          alert('❌ Error al generar reporte');
+          console.error(error);
+        }
+      })
+      .catch(error => {
+        document.body.removeChild(loadingMsg);
+        console.error('Error:', error);
+        alert('❌ Error al obtener datos de Google Sheets. Verifica la configuración.');
+      });
     }
 
     function clearAllData() {
@@ -951,21 +978,50 @@ Tratamiento: Antirretroviral
         return;
       }
 
-      const confirmation = confirm('⚠️ ¿Eliminar TODAS las respuestas?\n\nTotal: ' + submittedAnswers.length + '\n\n🚨 NO se puede deshacer');
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'TU_URL_AQUI/exec') {
+        alert('⚠️ Debes configurar GOOGLE_SCRIPT_URL para usar esta función en Google Sites');
+        return;
+      }
+
+      const confirmation = confirm('⚠️ ¿Eliminar TODAS las respuestas de Google Sheets?\n\n🚨 Esta acción NO se puede deshacer.\n\nSe eliminarán todos los datos excepto los encabezados.');
       
       if (!confirmation) return;
 
-      const doubleCheck = confirm('🔴 CONFIRMACIÓN FINAL:\n\n¿Borrar ' + submittedAnswers.length + ' respuestas?');
+      const doubleCheck = confirm('🔴 CONFIRMACIÓN FINAL:\n\n¿Realmente deseas borrar TODAS las respuestas de estudiantes?');
       
       if (!doubleCheck) return;
 
+      // Mostrar mensaje de carga
+      const loadingMsg = document.createElement('div');
+      loadingMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:9999;text-align:center;';
+      loadingMsg.innerHTML = '<div style="font-size:24px;margin-bottom:10px;">🗑️</div><div style="font-size:16px;font-weight:600;color:#dc2626;">Eliminando datos de Google Sheets...</div>';
+      document.body.appendChild(loadingMsg);
+
+      fetch(GOOGLE_SCRIPT_URL + '?action=clearData', {
+        method: 'GET',
+      })
+      .then(response => response.json())
+      .then(result => {
+        document.body.removeChild(loadingMsg);
+        
+        if (result.status === 'success') {
+          alert('✅ Todos los datos han sido eliminados exitosamente de Google Sheets');
+        } else {
+          alert('❌ Error al eliminar datos: ' + result.message);
+        }
+      })
+      .catch(error => {
+        document.body.removeChild(loadingMsg);
+        console.error('Error:', error);
+        alert('❌ Error al eliminar datos. Verifica la configuración.');
+      });
+      
+      // También limpiar localStorage si está disponible
       try {
         submittedAnswers = [];
         localStorage.removeItem('answers');
-        alert('✅ Datos eliminados exitosamente');
-      } catch (error) {
-        alert('❌ Error al eliminar datos');
-        console.error(error);
+      } catch (e) {
+        // Silenciar error si localStorage no está disponible
       }
     }
 
