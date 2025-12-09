@@ -913,7 +913,7 @@ Pull Requests: 384
 
 Última actualización:
 File: TransactionService.java
-Author: ramírez.ortiz@techsol-rd.com
+Author: ramí<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f6d7a6531706d6b76655f6b7a7c776c7073326d7b317c7072">[email&#160;protected]</a>
 Commit: "Fix: validación monto transferencias"
 
 PROPIEDAD INTELECTUAL
@@ -963,22 +963,18 @@ NDA vigente hasta 2029</div>
 
     <div class="teacher-section">
       <h3>🔐 Panel del Docente</h3>
-      <p>Funciones exclusivas para el docente</p>
+      <p>Funciones exclusivas del docente</p>
       <div class="teacher-buttons">
         <button class="teacher-button" onclick="downloadTeacherReport()">📊 Generar Reporte Consolidado</button>
         <button class="clear-button" onclick="clearAllData()">🗑️ Limpiar Todos los Datos</button>
       </div>
     </div>
-
-    <div style="text-align: center; margin-top: 30px; color: white; opacity: 0.8;">
-      <p>© 2024 - Ing. Juana Alt. Paulino | Centro Educativo Nuestra Sra. De la Altagracia</p>
-    </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     // CONFIGURACIÓN: Reemplaza con tu URL de Google Apps Script
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvxxJg8leJYratLY7DbK3aH-h0dE5DoLw2HKms6H0KUx4ZcqaIu00wF8n0SIKId5z_uQ/exec';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWP6wBAseJZcutst3HJy9JWUJNcKAGBoTFiyT36DvputQr8UvpFwzZ80brD-FIMWhJOw/exec';
     
     let submittedAnswers = [];
 
@@ -1203,21 +1199,69 @@ NDA vigente hasta 2029</div>
         return;
       }
 
-      // Cargar respuestas desde localStorage
-      try {
-        const stored = localStorage.getItem('confidencialidad_answers');
-        if (stored) {
-          submittedAnswers = JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error('Error al cargar respuestas:', e);
-      }
-
-      if (submittedAnswers.length === 0) {
-        alert('⚠️ No hay respuestas guardadas todavía.\n\nEspera a que los estudiantes envíen sus respuestas.');
+      // Mostrar mensaje de que se están obteniendo los datos
+      if (!confirm('📊 Se generará el reporte consolidado con los datos de Google Sheets.\n\n⚠️ IMPORTANTE: Este proceso puede tardar unos segundos.\n\n¿Deseas continuar?')) {
         return;
       }
 
+      // Verificar configuración de Google Sheets
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('TU_URL')) {
+        alert('⚠️ Google Sheets no está configurado.\n\nPor favor, configura la URL de Apps Script en el código para usar esta función.');
+        return;
+      }
+
+      // Solicitar datos desde Google Sheets
+      const loadingMsg = document.createElement('div');
+      loadingMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:9999;text-align:center;min-width:300px;';
+      loadingMsg.innerHTML = '<h3 style="color:#1e3a8a;margin-bottom:15px;">📥 Obteniendo datos...</h3><p style="color:#64748b;">Por favor espera mientras se descargan las respuestas de Google Sheets</p><div style="margin-top:20px;"><div style="width:100%;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="width:100%;height:100%;background:linear-gradient(90deg,#3b82f6,#1e3a8a);animation:loading 1.5s ease-in-out infinite;"></div></div></div><style>@keyframes loading{0%,100%{transform:translateX(-100%)}50%{transform:translateX(100%)}}</style>';
+      document.body.appendChild(loadingMsg);
+
+      // Solicitar datos al servidor
+      fetch(GOOGLE_SCRIPT_URL + '?action=getAllData&pin=' + pin, {
+        method: 'GET',
+        mode: 'cors'
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.body.removeChild(loadingMsg);
+        
+        if (!data.success) {
+          alert('❌ Error al obtener datos: ' + (data.error || 'Desconocido'));
+          return;
+        }
+
+        if (!data.responses || data.responses.length === 0) {
+          alert('⚠️ No hay respuestas guardadas en Google Sheets.\n\nEspera a que los estudiantes envíen sus respuestas.');
+          return;
+        }
+
+        // Generar el PDF con los datos obtenidos
+        generateConsolidatedPDF(data.responses);
+      })
+      .catch(error => {
+        document.body.removeChild(loadingMsg);
+        console.error('Error al obtener datos:', error);
+        
+        // Fallback: intentar con localStorage
+        alert('⚠️ No se pudo conectar con Google Sheets.\n\nIntentando con datos locales guardados en el navegador...');
+        
+        try {
+          const stored = localStorage.getItem('confidencialidad_answers');
+          if (stored) {
+            const localData = JSON.parse(stored);
+            if (localData.length > 0) {
+              generateConsolidatedPDF(localData);
+              return;
+            }
+          }
+          alert('❌ No hay datos disponibles.\n\nAsegúrate de:\n1. Haber configurado Google Sheets correctamente\n2. Que los estudiantes hayan enviado respuestas\n3. Estar conectado a internet');
+        } catch (e) {
+          alert('❌ No se pueden cargar los datos.\n\nPor favor verifica:\n1. La configuración de Google Sheets\n2. Tu conexión a internet\n3. Los permisos del navegador');
+        }
+      });
+    }
+
+    function generateConsolidatedPDF(responses) {
       try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -1236,7 +1280,7 @@ NDA vigente hasta 2029</div>
         
         doc.setFontSize(11);
         doc.setFont(undefined, 'bold');
-        doc.text('Total de estudiantes: ' + submittedAnswers.length, 105, 145, { align: 'center' });
+        doc.text('Total de estudiantes: ' + responses.length, 105, 145, { align: 'center' });
         doc.setFont(undefined, 'normal');
         doc.text('Fecha del reporte: ' + new Date().toLocaleDateString('es-DO'), 105, 153, { align: 'center' });
 
@@ -1249,30 +1293,30 @@ NDA vigente hasta 2029</div>
         ];
 
         // Generar página para cada estudiante
-        submittedAnswers.forEach((sub, idx) => {
+        responses.forEach((sub, idx) => {
           doc.addPage();
           
           // Encabezado de página
           doc.setFontSize(16);
           doc.setFont(undefined, 'bold');
-          doc.text('Estudiante ' + (idx + 1) + ' de ' + submittedAnswers.length, 105, 20, { align: 'center' });
+          doc.text('Estudiante ' + (idx + 1) + ' de ' + responses.length, 105, 20, { align: 'center' });
           
           // Información del estudiante
           doc.setFontSize(11);
           doc.setFont(undefined, 'bold');
           doc.text('Nombre:', 20, 32);
           doc.setFont(undefined, 'normal');
-          doc.text(sub.studentName, 45, 32);
+          doc.text(sub.studentName || 'N/A', 45, 32);
           
           doc.setFont(undefined, 'bold');
           doc.text('Fecha:', 20, 39);
           doc.setFont(undefined, 'normal');
-          doc.text(sub.date, 45, 39);
+          doc.text(sub.date || 'N/A', 45, 39);
           
           doc.setFont(undefined, 'bold');
           doc.text('Escenario:', 20, 46);
           doc.setFont(undefined, 'normal');
-          const scenarioText = 'Escenario ' + sub.scenario + ' - ' + sub.scenarioTitle.split(':')[1].trim();
+          const scenarioText = 'Escenario ' + sub.scenario + ' - ' + (sub.scenarioTitle ? sub.scenarioTitle.split(':')[1].trim() : 'N/A');
           doc.text(scenarioText, 45, 46);
           
           // Línea separadora
@@ -1282,8 +1326,9 @@ NDA vigente hasta 2029</div>
           
           // Respuestas
           let y = 58;
+          const answers = sub.answers || [];
           
-          sub.answers.forEach((ans, i) => {
+          questions.forEach((q, i) => {
             if (y > 250) {
               doc.addPage();
               y = 20;
@@ -1292,21 +1337,21 @@ NDA vigente hasta 2029</div>
             // Pregunta
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
-            const questionLines = doc.splitTextToSize(questions[i], 170);
+            const questionLines = doc.splitTextToSize(q, 170);
             doc.text(questionLines, 20, y);
             y += (questionLines.length * 5) + 3;
             
             // Respuesta
             doc.setFont(undefined, 'normal');
             doc.setFontSize(9);
-            const answerLines = doc.splitTextToSize(ans || 'Sin respuesta', 165);
+            const answerLines = doc.splitTextToSize(answers[i] || 'Sin respuesta', 165);
             doc.text(answerLines, 25, y);
             y += (answerLines.length * 4.5) + 8;
           });
         });
 
         doc.save('Reporte_Consolidado_Confidencialidad.pdf');
-        alert('✅ Reporte consolidado descargado exitosamente!\n\nTotal de estudiantes: ' + submittedAnswers.length);
+        alert('✅ Reporte consolidado descargado exitosamente!\n\nTotal de estudiantes: ' + responses.length);
       } catch (error) {
         alert('❌ Error al generar el reporte consolidado.');
         console.error('Error:', error);
@@ -1320,24 +1365,14 @@ NDA vigente hasta 2029</div>
         return;
       }
 
-      // Cargar respuestas actuales
-      try {
-        const stored = localStorage.getItem('confidencialidad_answers');
-        if (stored) {
-          submittedAnswers = JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error('Error:', e);
-      }
-
-      if (submittedAnswers.length === 0) {
-        alert('ℹ️ No hay datos para eliminar.');
+      // Verificar configuración de Google Sheets
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('TU_URL')) {
+        alert('⚠️ Google Sheets no está configurado.\n\nPor favor, configura la URL de Apps Script en el código para usar esta función.');
         return;
       }
 
       const confirmation = confirm(
-        '⚠️ ADVERTENCIA: Esta acción eliminará TODAS las respuestas\n\n' +
-        'Total de registros: ' + submittedAnswers.length + ' estudiantes\n\n' +
+        '⚠️ ADVERTENCIA: Esta acción eliminará TODAS las respuestas de Google Sheets\n\n' +
         '🚨 Esta acción NO SE PUEDE DESHACER\n\n' +
         '¿Deseas continuar?'
       );
@@ -1346,32 +1381,49 @@ NDA vigente hasta 2029</div>
 
       const doubleCheck = confirm(
         '🔴 CONFIRMACIÓN FINAL\n\n' +
-        '¿Estás seguro de borrar ' + submittedAnswers.length + ' respuestas?\n\n' +
+        '¿Estás COMPLETAMENTE SEGURO de borrar todas las respuestas?\n\n' +
         'Esta es tu última oportunidad para cancelar.'
       );
       
       if (!doubleCheck) return;
 
-      try {
-        // Limpiar datos locales
-        submittedAnswers = [];
-        localStorage.removeItem('confidencialidad_answers');
+      // Mostrar mensaje de procesamiento
+      const loadingMsg = document.createElement('div');
+      loadingMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:9999;text-align:center;min-width:300px;';
+      loadingMsg.innerHTML = '<h3 style="color:#dc2626;margin-bottom:15px;">🗑️ Eliminando datos...</h3><p style="color:#64748b;">Por favor espera mientras se limpian los registros</p>';
+      document.body.appendChild(loadingMsg);
+
+      // Enviar solicitud de limpieza a Google Sheets
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear', pin: pin })
+      })
+      .then(() => {
+        document.body.removeChild(loadingMsg);
         
-        // Intentar limpiar Google Sheets si está configurado
-        if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('TU_URL')) {
-          fetch(GOOGLE_SCRIPT_URL + '?action=clear', {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'clear', pin: pin })
-          }).catch(e => console.warn('No se pudo limpiar Google Sheets:', e));
+        // También limpiar localStorage local
+        try {
+          submittedAnswers = [];
+          localStorage.removeItem('confidencialidad_answers');
+        } catch (e) {
+          console.warn('No se pudo limpiar localStorage:', e);
         }
         
-        alert('✅ Todos los datos han sido eliminados exitosamente.\n\nLocalStorage: Limpiado\nGoogle Sheets: Solicitud enviada');
-      } catch (error) {
-        alert('❌ Error al eliminar los datos.');
-        console.error('Error:', error);
-      }
+        alert('✅ Datos eliminados exitosamente.\n\n' +
+              'Se han limpiado:\n' +
+              '• Google Sheets\n' +
+              '• Datos locales del navegador\n\n' +
+              'El sistema está listo para nuevas respuestas.');
+      })
+      .catch(error => {
+        document.body.removeChild(loadingMsg);
+        console.error('Error al limpiar datos:', error);
+        alert('⚠️ Solicitud enviada a Google Sheets.\n\n' +
+              'Debido a restricciones del navegador, no podemos confirmar el resultado.\n\n' +
+              'Por favor verifica directamente en tu Google Sheet si los datos se eliminaron correctamente.');
+      });
     }
 
     // Inicialización al cargar la página
@@ -1388,11 +1440,4 @@ NDA vigente hasta 2029</div>
       
       // Establecer fecha actual
       const today = new Date().toISOString().split('T')[0];
-      document.getElementById('currentDate').value = today;
-      
-      console.log('✅ Sistema de Confidencialidad inicializado correctamente');
-      console.log('📊 Respuestas en memoria:', submittedAnswers.length);
-    });
-  </script>
-</body>
-</html>
+      document.getElemen
